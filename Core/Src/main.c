@@ -68,6 +68,7 @@ static void MX_TIM4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/* _write function is necessary when using serial wire viewer via STMCubeProgrammer*/
 int _write(int file, char *ptr, int len) {
 	int DataIdx;
 	for (DataIdx = 0; DataIdx < len; DataIdx++) {
@@ -122,28 +123,6 @@ void update_encoders(void) {
 		unwrap_encoder(&encoders[i]);  // Call unwrap_encoder for each encoder
 
 }
-void ProcessReceivedData() {
-    char *token;
-    // Assuming CDC_ReceiveBuffer contains the received string in format "value1,value2"
-    // Convert the first part to integer
-    token = strtok((char *)buffer, ",");
-    if (token != NULL) {
-        pwm_value1 = atoi(token);
-    } else {
-        return; // Invalid data format
-    }
-
-    // Convert the second part to integer
-    token = strtok(NULL, ",");
-    if (token != NULL) {
-        pwm_value2 = atoi(token);
-    } else {
-        return; // Invalid data format
-    }
-
-    // Set the PWM duty cycles
-}
-
 /* USER CODE END 0 */
 
 /**
@@ -194,17 +173,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-
+		update_encoders(); //to refresh encoder counts
 		for (int i = 0; i < 4; i++) {
-			sprintf(message , "%c%ld\r\n", 65+i, encoders[i].unwrapped_count);
+			printf(message , "%c%ld\r\n", 65+i, encoders[i].unwrapped_count); // to print via serial wire viewer
+			sprintf(message , "%c%ld\r\n", 65+i, encoders[i].unwrapped_count); // to print via USB using USB_CDC
 			CDC_Transmit_FS(message, strlen(message));
 			HAL_Delay(1);
 		}
-		CDC_Transmit_FS("\n",1);
-		sprintf(message , "L:%d , R:%d",pwm_value1 , pwm_value2 );
-		CDC_Transmit_FS(message, sizeof(message));
-		HAL_Delay(1);
 
 	}
   /* USER CODE END 3 */
